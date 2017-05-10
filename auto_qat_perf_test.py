@@ -43,9 +43,10 @@ def test_openssl(dir_result_sub):
     status_qat_off.wait()
     for item_qat_status in output_status_qat:
         try:
-            re.search(pattern_for_qat_status, item_qat_status)
-            print "QAT shutdown fail! Please check!"
-            sys.exit(1)
+            result_qat_status_shudown = re.search(pattern_for_qat_status, item_qat_status)
+            if result_qat_status_shudown is not None:
+                print "QAT shutdown fail! Please check!"
+                sys.exit(1)
         except TypeError:
             print "QAT shutdown succefully!"
     filename_result_qat_off = os.path.join(dir_result_sub, "result_openssl_qat_off.txt")
