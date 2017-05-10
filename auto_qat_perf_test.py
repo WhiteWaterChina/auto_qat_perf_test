@@ -101,7 +101,7 @@ def plot_openssl(list_policy_first, list_block_first, dir_result):
     pyplot.xticks(index + bar_width, policy_block_data_list)
     pyplot.legend()
     pyplot.tight_layout()
-    figure_filename = os.path.join(dir_result, "openssl.jpg")
+    figure_filename = os.path.join(dir_result, "openssl.png")
     pyplot.savefig(figure_filename)
 
 
