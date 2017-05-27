@@ -112,7 +112,10 @@ def qat_cpa_test(dir_result_sub):
     filename_result_cpa.close()
     filename_result_cpa = open(path_file_result, mode='r')
     data_cpa_result = filename_result_cpa.read()
-    data_list_display_policy = []
+    list_data_spec_cfg1 = [13000, 45000, 80000, 133000, 144000, 152000, 7000, 12000, 43000, 53000, 69000, 70000, 9000, 32000, 62000, 101000, 128000, 134000, 102000, 44000, 135400, 141600, 95000, 43000, 129800, 135400]
+    list_data_spec_cfg2 = [10000, 37000, 64000, 96000, 102000, 105000, 5000, 8000, 38000, 49000, 64000, 70000, 7000, 26000, 53000, 83000, 91000, 10300, 102000, 44000, 108100, 108900, 75000, 43000, 108900, 108900]
+
+    data_list_display_policy_temp = []
     data_display = []
     list_block_cipher_aes128_cbc = ["64", "256", "512", "1024", "2048", "4096"]
     list_block_kasumi_f8 = ["40", "64", "256", "320", "512", "1024"]
@@ -122,19 +125,19 @@ def qat_cpa_test(dir_result_sub):
         pattern = re.compile(r"Cipher\sEncrypt\sAES128-CBC\s*API\s*?Data_Plane\sPacket\sSize\s*?%s\s.*\s*s.*\s.*\s.*\s.*\s.*\sThroughput.*?(\d+)" % item)
         result = re.search(pattern=pattern, string=data_cpa_result).groups()
         data_display.append(result[0])
-        data_list_display_policy.append(temp_data)
+        data_list_display_policy_temp.append(temp_data)
     for item in list_block_kasumi_f8:
         temp_data = "KASUMI_F8" + "-" + item
         pattern = re.compile(r"Cipher\sEncrypt\sKASUMI_F8\s*API\s*?Data_Plane\sPacket\sSize\s*?%s\s.*\s*s.*\s.*\s.*\s.*\s.*\sThroughput.*?(\d+)" % item)
         result = re.search(pattern=pattern, string=data_cpa_result).groups()
         data_display.append(result[0])
-        data_list_display_policy.append(temp_data)
+        data_list_display_policy_temp.append(temp_data)
     for item in list_block_aes128_cbc_hmac_sha1:
         temp_data = "AES128_CBC_HMAC_SHA1" + "-" + item
         pattern = re.compile(r"Algorithm\s*Chaining\s*-\s*AES128-CBC\s*HMAC-SHA1\s*API\s*?Data_Plane\sPacket\sSize\s*?%s\s.*\s*s.*\s.*\s.*\s.*\s.*\sThroughput.*?(\d+)" % item)
         result = re.search(pattern=pattern, string=data_cpa_result).groups()
         data_display.append(result[0])
-        data_list_display_policy.append(temp_data)
+        data_list_display_policy_temp.append(temp_data)
     list_huffman_policy = ["STATIC", "DYNAMIC"]
     list_huffman_direction = ["COMPRESS", "DECOMPRESS"]
     list_huffman_level = ["1", "2"]
@@ -149,23 +152,57 @@ def qat_cpa_test(dir_result_sub):
                 result_huffman = re.search(pattern_huffman, data_cpa_result).groups()
                 list_huffman_display.append(policy_huffman_display)
                 list_data_huffman_display.append(result_huffman[0])
+    list_policy_display = data_list_display_policy_temp + list_huffman_display
+    list_data_display = data_display + list_data_huffman_display
+    list_data_diff = []
+    list_data_spec_display = []
+    if sys.argv[1] == "cfg1":
+        list_data_spec_display = list_data_spec_cfg1
+        for index_data_cfg1, item_data_cfg1 in enumerate(list_data_display):
+            diff_data = float(item_data_cfg1) - 0.9 * float(list_data_spec_display[index_data_cfg1])
+            list_data_diff.append(str(diff_data))
+    elif sys.argv[1] == "cfg2":
+        list_data_spec_display = list_data_spec_cfg2
+        for index_data_cfg2, item_data_cfg2 in enumerate(list_data_display):
+            diff_data = float(item_data_cfg2) - 0.9 * float(list_data_spec_display[index_data_cfg2])
+            list_data_diff.append(str(diff_data))
     filename_cpa_result = os.path.join(dir_result_sub, "result_cpa_test.xlsx")
     workbook = xlsxwriter.Workbook(filename=filename_cpa_result)
     sheetone = workbook.add_worksheet("cpa_result")
     sheetone.set_column("A:A", 38)
+    sheetone.set_column("B:D", 11)
     sheetone.write(0, 0, "Policy")
-    sheetone.write(0, 1, "Value")
-    for index_write, item_write in enumerate(data_list_display_policy):
-        sheetone.write(index_write + 2, 0, item_write)
-        sheetone.write(index_write + 2, 1, data_display[index_write])
-    length = len(data_list_display_policy) + 1
-    for index_write_huffman, item_write_huffman in enumerate(list_huffman_display):
-        sheetone.write(length + index_write_huffman, 0, item_write_huffman)
-        sheetone.write(length + index_write_huffman, 1, list_data_huffman_display[index_write_huffman])
+    sheetone.write(0, 1, "Value_Test")
+    sheetone.write(0, 2, "Value_Spec")
+    sheetone.write(0, 3, "Value_diff")
+    sheetone.write(0, 4, "Results")
+#    for index_write, item_write in enumerate(data_list_display_policy_temp):
+#        sheetone.write(index_write + 1, 0, item_write)
+#        sheetone.write(index_write + 1, 1, data_display[index_write])
+#    length = len(data_list_display_policy_temp) + 1
+#    for index_write_huffman, item_write_huffman in enumerate(list_huffman_display):
+#        sheetone.write(length + index_write_huffman, 0, item_write_huffman)
+#        sheetone.write(length + index_write_huffman, 1, list_data_huffman_display[index_write_huffman])
+    list_ok_or_not = []
+    for index_write_policy, item_write_policy in enumerate(list_policy_display):
+        if float(list_data_diff[index_write_policy]) < 0.0:
+            list_ok_or_not.append("FAIL")
+        else:
+            list_ok_or_not.append("PASS")
+    for index_write_policy, item_write_policy in enumerate(list_policy_display):
+        sheetone.write(index_write_policy + 1, 0, item_write_policy)
+        sheetone.write(index_write_policy + 1, 1, list_data_display[index_write_policy])
+        sheetone.write(index_write_policy + 1, 2, list_data_spec_display[index_write_policy])
+        sheetone.write(index_write_policy + 1, 3, list_data_diff[index_write_policy])
+        sheetone.write(index_write_policy + 1, 4, list_ok_or_not[index_write_policy])
     workbook.close()
 
 
 if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("Usage:python auto_qat_perf_test.py cfg1/2!")
+        print("Like:python auto_qat_perf_test.py cfg1")
+        sys.exit(1)
     if os.path.exists("results") and os.path.isdir("results"):
         shutil.rmtree("results")
     os.mkdir("results")
