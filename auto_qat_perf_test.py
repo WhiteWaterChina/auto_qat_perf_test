@@ -30,38 +30,61 @@ def test_openssl(dir_result_sub):
             else:
                 print "qat_dev%s bus_number:%s is %s! Please check!" % (qat_device_num, qat_device_bus, qat_device_state)
                 sys.exit(1)
-    filename_result_qat_on = os.path.join(dir_result_sub, "result_openssl_qat_on.txt")
-    file_openssl_qaton = open(filename_result_qat_on, mode='w')
-    test_qat_openssl_on = subprocess.Popen(["openssl", "speed"], stdout=file_openssl_qaton)
-    test_qat_openssl_on.wait()
-    file_openssl_qaton.close()
-    print "Begin to test openssl with QAT off"
-    test_qat_off = subprocess.Popen(["/etc/init.d/qat_service", "shutdown"])
-    test_qat_off.wait()
-    status_qat_off = subprocess.Popen(["/etc/init.d/qat_service", "status"], stdout=subprocess.PIPE)
-    output_status_qat = status_qat_off.stdout.readlines()
-    status_qat_off.wait()
-    for item_qat_status in output_status_qat:
-        try:
-            result_qat_status_shudown = re.search(pattern_for_qat_status, item_qat_status)
-            if result_qat_status_shudown is not None:
-                print "QAT shutdown fail! Please check!"
-                sys.exit(1)
-        except TypeError:
-            print "QAT shutdown succefully!"
-    filename_result_qat_off = os.path.join(dir_result_sub, "result_openssl_qat_off.txt")
-    file_openssl_qatoff = open(filename_result_qat_off, mode='w')
-    test_qat_openssl_off = subprocess.Popen(["openssl", "speed"], stdout=file_openssl_qatoff)
-    test_qat_openssl_off.wait()
-    file_openssl_qatoff.close()
+    # rsa
+    result_openssl_rsa_qat_on = os.path.join(dir_result_sub, "result_openssl_rsa_qat_on.txt")
+    file_openssl_rsa_qat_on = open(result_openssl_rsa_qat_on, mode='w')
+    test_openssl_rsa_qat_on = subprocess.Popen(["/urs/local/ssl/bin/openssl", "speed", "-engine", "qat", "-elapsed", "-async_jobs", "72", "rsa"], stdout=file_openssl_rsa_qat_on)
+    test_openssl_rsa_qat_on.wait()
+    file_openssl_rsa_qat_on.close()
+
+    filename_result_rsa_qat_off = os.path.join(dir_result_sub, "result_openssl_rsa_qat_off.txt")
+    file_openssl_rsa_qat_off = open(filename_result_rsa_qat_off, mode='w')
+    test_openssl_rsa_qat_off = subprocess.Popen(["/urs/local/ssl/bin/openssl", "speed", "-elapsed", "rsa"], stdout=file_openssl_rsa_qat_off)
+    test_openssl_rsa_qat_off.wait()
+    file_openssl_rsa_qat_off.close()
+    # ecdh
+    result_openssl_ecdh_qat_on = os.path.join(dir_result_sub, "result_openssl_ecdh_qat_on.txt")
+    file_openssl_ecdh_qat_on = open(result_openssl_ecdh_qat_on, mode='w')
+    test_openssl_ecdh_qat_on = subprocess.Popen(["/urs/local/ssl/bin/openssl", "speed", "-engine", "qat", "-elapsed", "-async_jobs", "36", "ecdh"], stdout=file_openssl_ecdh_qat_on)
+    test_openssl_ecdh_qat_on.wait()
+    file_openssl_ecdh_qat_on.close()
+
+    filename_result_ecdh_qat_off = os.path.join(dir_result_sub, "result_openssl_ecdh_qat_off.txt")
+    file_openssl_ecdh_qat_off = open(filename_result_ecdh_qat_off, mode='w')
+    test_openssl_ecdh_qat_off = subprocess.Popen(["/urs/local/ssl/bin/openssl", "speed", "-elapsed", "ecdh"], stdout=file_openssl_ecdh_qat_off)
+    test_openssl_ecdh_qat_off.wait()
+    file_openssl_ecdh_qat_off.close()
+    # ecdsa
+    result_openssl_ecdsa_qat_on = os.path.join(dir_result_sub, "result_openssl_ecdsa_qat_on.txt")
+    file_openssl_ecdsa_qat_on = open(result_openssl_ecdsa_qat_on, mode='w')
+    test_openssl_ecdsa_qat_on = subprocess.Popen(["/urs/local/ssl/bin/openssl", "speed", "-engine", "qat", "-elapsed", "-async_jobs", "36", "ecdsa"], stdout=file_openssl_ecdsa_qat_on)
+    test_openssl_ecdsa_qat_on.wait()
+    file_openssl_ecdsa_qat_on.close()
+
+    filename_result_ecdsa_qat_off = os.path.join(dir_result_sub, "result_openssl_ecdsa_qat_off.txt")
+    file_openssl_ecdsa_qat_off = open(filename_result_ecdsa_qat_off, mode='w')
+    test_openssl_ecdsa_qat_off = subprocess.Popen(["/urs/local/ssl/bin/openssl", "speed", "-elapsed", "ecdsa"], stdout=file_openssl_ecdsa_qat_off)
+    test_openssl_ecdsa_qat_off.wait()
+    file_openssl_ecdsa_qat_off.close()
 
 
-def filter_openssl(filename_openssl_result, list_policy_filter_sub):
-    #    list_policy_second = ["rsa  512 bits", "rsa 1024 bits", "rsa 2048 bits", "rsa 4096 bits", "dsa  512 bits", "dsa 1024 bits", "dsa 2048 bits",
-    #                          "256 bit ecdsa (nistp256)", "384 bit ecdsa (nistp384)", "521 bit ecdsa (nistp521)"]
-    #    list_policy_seoncd_secong = ["sign", "verify", " sign/s", "verify/s"]
-    #    list_policy_third = ["256 bit ecdh (nistp256)", "384 bit ecdh (nistp384)", "521 bit ecdh (nistp521)"]
-    #    list_policy_third_second = ["op", "op/s"]
+def filter_openssl_rsa(filename_openssl_result, list_policy_filter_sub):
+    data_display_temp = []
+    data_display = []
+
+    file_handler = open(filename_openssl_result, mode='r')
+    data_file = file_handler.read()
+    for index_policy, item_policy in enumerate(list_policy_filter_sub):
+        pattern_data = re.compile(r"%s\s*(\d+.\d+).*?(\d+.\d+).*?(\d+.\d+).*?(\d+.\d+).*?(\d+.\d+)" % item_policy)
+        result_filter = re.search(pattern=pattern_data, string=data_file).groups()
+        for item_data_display in result_filter:
+            data_display_temp.append(item_data_display)
+    for item_data in data_display_temp:
+        data_display.append(float(item_data))
+    file_handler.close()
+    return data_display
+
+def filter_openssl_ecdh(filename_openssl_result, list_policy_filter_sub):
     data_display_temp = []
     data_display = []
 
@@ -78,27 +101,26 @@ def filter_openssl(filename_openssl_result, list_policy_filter_sub):
     return data_display
 
 
-def plot_openssl(list_policy_first_sub, list_block_first_sub, dir_result_sub):
+def plot_openssl_rsa(list_policy_first_sub, dir_result_sub):
     policy_block_data_list = []
     for item_policy_first in list_policy_first_sub:
-        for item_block in list_block_first_sub:
-            data_item = item_policy_first + " " + item_block
-            policy_block_data_list.append(data_item)
-    openssl_qat_on = filter_openssl(os.path.join(dir_result_sub, "result_openssl_qat_on.txt"), list_policy_filter)
-    openssl_qat_off = filter_openssl(os.path.join(dir_result_sub, "result_openssl_qat_off.txt"), list_policy_filter)
-    figure_openssl = pyplot.figure("openssl")
+        data_item = item_policy_first + " " + item_block
+        policy_block_data_list.append(data_item)
+    openssl_qat_on = filter_openssl_rsa(os.path.join(dir_result_sub, "result_openssl_ras_qat_on.txt"), list_policy_openssl_rsa)
+    openssl_qat_off = filter_openssl_rsa(os.path.join(dir_result_sub, "result_openssl_rsa_qat_off.txt"), list_policy_openssl_rsa)
+    figure_openssl = pyplot.figure("openssl_rsa")
     sub_figure = figure_openssl.add_subplot()
     bar_width = 0.5
     n_groups = len(policy_block_data_list)
     index = numpy.arange(n_groups)
-    pyplot.bar(left=index, height=openssl_qat_on, width=bar_width, color='r', label='enable_qat')
-    pyplot.bar(left=index + bar_width, height=openssl_qat_off, width=bar_width, color='b', label='disable_qat')
+    pyplot.bar(left=index, height=openssl_qat_on, width=bar_width, color='r', label='with_qat')
+    pyplot.bar(left=index + bar_width, height=openssl_qat_off, width=bar_width, color='b', label='without_qat')
     pyplot.xlabel('Policy')
     pyplot.ylabel('Value')
     pyplot.xticks(index + bar_width, policy_block_data_list)
     pyplot.legend()
     pyplot.tight_layout()
-    figure_filename = os.path.join(dir_result_sub, "openssl.png")
+    figure_filename = os.path.join(dir_result_sub, "openssl_rsa.png")
     pyplot.savefig(figure_filename)
 
 
@@ -208,14 +230,11 @@ if __name__ == "__main__":
     os.mkdir("results")
     dir_result = os.path.join(os.getcwd(), "results")
     test_openssl(dir_result)
-    list_policy_first = ["md2", "mdc2", "md4", "md5", "hmac(md5)", "sha1", "rmd160", "rc4", "des cbc", "des ede3",
-                         "idea cbc", "seed cbc", "rc2 cbc", "rc5-32/12 cbc", "blowfish cbc", "cast cbc", "aes-128 cbc",
-                         "aes-192 cbc", "aes-256 cbc", "camellia-128 cbc", "camellia-192 cbc", "camellia-256 cbc",
-                         "sha256", "sha512", "whirlpool", "aes-128 ige", "aes-192 ige", "aes-256 ige", "ghash"]
-    list_policy_filter = ["md2", "mdc2", "md4", "md5", "hmac\(md5\)", "sha1", "rmd160", "rc4", "des cbc", "des ede3",
-                          "idea cbc", "seed cbc", "rc2 cbc", "rc5-32\/12 cbc", "blowfish cbc", "cast cbc",
-                          "aes-128 cbc", "aes-192 cbc", "aes-256 cbc", "camellia-128 cbc", "camellia-192 cbc", "camellia-256 cbc",
-                          "sha256", "sha512", "whirlpool", "aes-128 ige", "aes-192 ige", "aes-256 ige", "ghash"]
-    list_block_first = ["16bytes", "64bytes", "256bytes", "1024bytes", "8192bytes"]
-    plot_openssl(list_policy_first, list_block_first, dir_result)
+    list_policy_openssl_rsa = ["512", "1024", "2048", "3072", "4086", "7680","15360"]
+    list_policy_openssl_ecdh = ["secp160r1", "nistp192", "nistp224", "nistp256", "nistp384", "nistp521", "nistk163", "nistk233", "nistk283", "nistk409",
+                          "nistk571", "nistb163", "nistb233", "nistb283", "nistb409", "nistb571", "aX25519"]
+    list_policy_openssl_ecdsa = ["secp160r1", "nistp192", "nistp224", "nistp256", "nistp384", "nistp521", "nistk163", "nistk233", "nistk283", "nistk409",
+                          "nistk571", "nistb163", "nistb233", "nistb283", "nistb409", "nistb571", "aX25519"]
+
+    plot_openssl_rsa(list_policy_openssl_rsa, dir_result)
     qat_cpa_test(dir_result)
